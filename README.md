@@ -1,16 +1,24 @@
-# Disponibilités des moniteurs
+# SSS - PWA Disponibilités des moniteurs
 
-Petite application web statique pour gérer les disponibilités des moniteurs aux entraînements du vendredi.
+Copiez tous les fichiers de ce dossier à la racine du dépôt GitHub Pages :
 
-## Déploiement sur GitHub Pages
+- index.html
+- manifest.json
+- service-worker.js
+- logo-sss.png
+- icon-192.png
+- icon-512.png
+- icon-maskable-192.png
+- icon-maskable-512.png
 
-1. Créez un nouveau dépôt GitHub, par exemple `disponibilites-moniteurs`.
-2. Ajoutez le fichier `index.html` à la racine du dépôt.
-3. Dans le dépôt, ouvrez **Settings > Pages**.
-4. Dans **Build and deployment**, choisissez **Deploy from a branch**.
-5. Sélectionnez la branche `main` et le dossier `/(root)`, puis **Save**.
-6. GitHub affichera ensuite l'adresse publique du site.
+GitHub Pages republiera automatiquement l'application.
 
-## Données
+## Installation sur téléphone
 
-Les disponibilités sont stockées dans Supabase. La page contient uniquement l'URL du projet et la clé publique/publishable Supabase ; aucune clé `service_role` ne doit être utilisée côté navigateur.
+### Android / Chrome
+Ouvrir le site dans Chrome, puis menu ⋮ > "Ajouter à l'écran d'accueil" ou "Installer l'application".
+
+### iPhone / Safari
+Ouvrir le site dans Safari, toucher Partager, puis "Sur l'écran d'accueil".
+
+L'application s'ouvrira ensuite comme une application indépendante, sans barre d'adresse.
