@@ -100,13 +100,13 @@
     </div>
   </section>
 
-  <div class="section-title"><div><h2>Mes prochains vendredis</h2><small>Indiquez votre présence et, si nécessaire, si vous donnez le cours.</small></div></div>
+  <div class="section-title"><div><h2>Mes prochains vendredis</h2><small>Indiquez votre présence et si vous donnez le cours.</small></div></div>
   <section class="fridays" id="fridays"></section>
 
   <div class="section-title"><div><h2>Vue d'ensemble</h2><small>🎓 indique le ou les moniteurs qui donnent l'entraînement.</small></div></div>
   <section class="overview"><div class="overview-scroll"><table><thead id="overviewHead"></thead><tbody id="overviewBody"></tbody></table></div></section>
 
-  <p class="footer-note">Les données sont enregistrées dans Supabase et partagées entre tous les moniteurs.</p>
+  <p class="footer-note">Les données sont partagées entre tous les moniteurs.</p>
 </main>
 <div class="toast" id="toast"></div>
 
@@ -152,7 +152,7 @@
       .lte("training_date",dateKey(fridays[fridays.length-1]));
 
     if(error){
-      console.error(error);setConnection("bad","Erreur de connexion à Supabase");toast("Impossible de charger les données");return;
+      console.error(error);setConnection("bad","Erreur de connexion à la base de donnée.");toast("Impossible de charger les données");return;
     }
 
     data={};
