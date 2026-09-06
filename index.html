@@ -39,6 +39,13 @@
     .section-title h2{margin:0;font-size:1.15rem}.section-title small{color:var(--muted)}
     .fridays{display:grid;grid-template-columns:1fr;gap:14px}
     .friday-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:0 8px 24px rgba(22,32,51,.05)}
+    .friday-card.holiday{background:#fde8e8;border-color:#ef4444}
+    .friday-card.holiday .date-label{color:#991b1b}
+    .holiday-banner{display:flex;align-items:center;justify-content:center;min-height:118px;border-radius:14px;background:#dc2626;color:#fff;font-size:1.35rem;font-weight:900;letter-spacing:.08em}
+    th.holiday-head{background:#fee2e2;color:#991b1b}
+    td.holiday-cell{background:#fee2e2}
+    .holiday-pill{display:inline-flex;align-items:center;justify-content:center;min-width:64px;height:30px;padding:0 10px;border-radius:999px;background:#dc2626;color:#fff;font-weight:900;font-size:.72rem;letter-spacing:.04em}
+
     .friday-head{margin-bottom:14px}.date-label{font-weight:800;font-size:1.08rem}
     .status-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
     .status-btn{border:none;border-radius:14px;padding:11px 8px;font:inherit;font-weight:800;cursor:pointer;transition:.15s ease;min-height:48px}
@@ -122,14 +129,32 @@
   const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
   let data={};
 
-  function upcomingFridays(count=8){
-    const dates=[],d=new Date();d.setHours(12,0,0,0);
-    const add=(5-d.getDay()+7)%7;d.setDate(d.getDate()+add);
-    for(let i=0;i<count;i++){dates.push(new Date(d));d.setDate(d.getDate()+7)}
+  const PLANNING_END = "2026-12-18";
+  const HOLIDAYS = new Set([
+    "2026-10-16",
+    "2026-10-23",
+    "2026-12-04"
+  ]);
+
+  function upcomingFridaysUntil(endDateString){
+    const dates=[];
+    const d=new Date();
+    d.setHours(12,0,0,0);
+
+    const add=(5-d.getDay()+7)%7;
+    d.setDate(d.getDate()+add);
+
+    const [year,month,day]=endDateString.split("-").map(Number);
+    const end=new Date(year,month-1,day,12,0,0,0);
+
+    while(d<=end){
+      dates.push(new Date(d));
+      d.setDate(d.getDate()+7);
+    }
     return dates;
   }
 
-  const fridays=upcomingFridays(8);
+  const fridays=upcomingFridaysUntil(PLANNING_END);
   const dateKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
   const formatDate=d=>new Intl.DateTimeFormat("fr-CH",{weekday:"long",day:"2-digit",month:"long"}).format(d);
   const shortDate=d=>new Intl.DateTimeFormat("fr-CH",{day:"2-digit",month:"2-digit"}).format(d);
@@ -145,6 +170,12 @@
   }
 
   async function loadData(){
+    if(fridays.length===0){
+      setConnection("ok","Planning terminé");
+      render();
+      return;
+    }
+
     setConnection("","Synchronisation…");
     const {data:rows,error}=await db.from("availabilities")
       .select("monitor,training_date,status,gives_training")
@@ -212,10 +243,22 @@
 
     fridays.forEach(date=>{
       const key=dateKey(date);
+      const isHoliday=HOLIDAYS.has(key);
       const entry=data[key]?.[user]||{status:"none",gives_training:false};
       const c=countsFor(date);
       const card=document.createElement("article");
-      card.className="friday-card";
+      card.className="friday-card"+(isHoliday?" holiday":"");
+
+      if(isHoliday){
+        card.innerHTML=`
+          <div class="friday-head">
+            <div class="date-label">${formatDate(date)}</div>
+          </div>
+          <div class="holiday-banner">Vacances scolaires</div>
+        `;
+        root.appendChild(card);
+        return;
+      }
 
       card.innerHTML=`
         <div class="friday-head">
@@ -261,13 +304,22 @@
 
   function renderOverview(){
     document.getElementById("overviewHead").innerHTML=
-      `<tr><th>Moniteur</th>${fridays.map(d=>`<th>${shortDate(d)}</th>`).join("")}</tr>`;
+      `<tr><th>Moniteur</th>${fridays.map(d=>{
+        const key=dateKey(d);
+        return `<th class="${HOLIDAYS.has(key)?"holiday-head":""}">${shortDate(d)}</th>`;
+      }).join("")}</tr>`;
 
     document.getElementById("overviewBody").innerHTML=monitors.map(m=>`
       <tr>
         <td>${m}</td>
         ${fridays.map(d=>{
-          const entry=data[dateKey(d)]?.[m]||{status:"none",gives_training:false};
+          const key=dateKey(d);
+
+          if(HOLIDAYS.has(key)){
+            return `<td class="holiday-cell" title="Congé scolaire"><span class="holiday-pill">CONGÉ</span></td>`;
+          }
+
+          const entry=data[key]?.[m]||{status:"none",gives_training:false};
           return `<td title="${statusText(entry.status)}${entry.gives_training?" - Donne l'entraînement":""}">
             <span class="pill ${entry.status}">
               ${statusLabel(entry.status)}
