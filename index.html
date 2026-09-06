@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f766e" />
+  <title>Disponibilités des moniteurs</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{
+      --bg:#f6f8fb;--card:#fff;--text:#172033;--muted:#68758b;--line:#e5eaf1;
+      --primary:#0f766e;--primary-soft:#e7f6f3;
+      --yes:#16803c;--yes-soft:#e8f7ed;--no:#c73737;--no-soft:#fdecec;
+      --maybe:#b7791f;--maybe-soft:#fff4dc;--none:#7b8798;--none-soft:#eef1f5;
+      --shadow:0 10px 30px rgba(22,32,51,.08);--radius:20px;
+    }
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+    .app{width:min(100%,1120px);margin:0 auto;padding:18px 14px 40px}
+    .hero{border-radius:28px;padding:22px;background:linear-gradient(135deg,#0f766e,#115e59);color:#fff;box-shadow:var(--shadow);margin-bottom:18px}
+    .hero h1{font-size:clamp(1.65rem,5vw,2.55rem);margin:0 0 8px;letter-spacing:-.03em}.hero p{margin:0;opacity:.9;line-height:1.5;max-width:760px}
+    .connection{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:.88rem;font-weight:700}
+    .dot{width:9px;height:9px;border-radius:50%;background:#f2c94c}.dot.ok{background:#55d98d}.dot.bad{background:#ff7a7a}
+    .toolbar{display:grid;grid-template-columns:1fr;gap:12px;margin:16px 0}.control{background:var(--card);padding:14px;border:1px solid var(--line);border-radius:18px;box-shadow:0 6px 18px rgba(22,32,51,.04)}
+    label{display:block;font-size:.82rem;font-weight:700;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:.045em}
+    select{width:100%;font:inherit;padding:12px 13px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--text);outline:none}
+    select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(15,118,110,.12)}
+    .section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:24px 4px 12px}.section-title h2{margin:0;font-size:1.15rem}.section-title small{color:var(--muted)}
+    .fridays{display:grid;grid-template-columns:1fr;gap:14px}.friday-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:0 8px 24px rgba(22,32,51,.05)}
+    .friday-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.date-label{font-weight:800;font-size:1.08rem}.date-sub{color:var(--muted);font-size:.9rem;margin-top:2px}
+    .count-badge{background:var(--primary-soft);color:var(--primary);padding:7px 10px;border-radius:999px;font-size:.82rem;font-weight:800;white-space:nowrap}
+    .status-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.status-btn{border:none;border-radius:14px;padding:11px 8px;font:inherit;font-weight:800;cursor:pointer;transition:.15s ease;min-height:48px}
+    .status-btn:disabled{opacity:.55;cursor:wait}.status-btn:active{transform:scale(.98)}.status-btn.yes{background:var(--yes-soft);color:var(--yes)}.status-btn.no{background:var(--no-soft);color:var(--no)}.status-btn.maybe{background:var(--maybe-soft);color:var(--maybe)}
+    .status-btn.active{outline:3px solid currentColor;outline-offset:1px}.status-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;font-size:.78rem}
+    .sum{padding:8px 6px;border-radius:12px;text-align:center;font-weight:800}.sum.yes{background:var(--yes-soft);color:var(--yes)}.sum.no{background:var(--no-soft);color:var(--no)}.sum.maybe{background:var(--maybe-soft);color:var(--maybe)}.sum.none{background:var(--none-soft);color:var(--none)}
+    .overview{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 24px rgba(22,32,51,.05);overflow:hidden}.overview-scroll{overflow:auto;-webkit-overflow-scrolling:touch}
+    table{width:100%;border-collapse:collapse;min-width:760px}th,td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:center;font-size:.9rem}
+    th{background:#fafbfc;color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;position:sticky;top:0;z-index:1}th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:inherit;z-index:2;min-width:150px}td:first-child{background:#fff;font-weight:750}
+    .pill{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:30px;padding:0 8px;border-radius:999px;font-weight:900;font-size:.78rem}.pill.yes{background:var(--yes-soft);color:var(--yes)}.pill.no{background:var(--no-soft);color:var(--no)}.pill.maybe{background:var(--maybe-soft);color:var(--maybe)}.pill.none{background:var(--none-soft);color:var(--none)}
+    .footer-note{color:var(--muted);line-height:1.5;font-size:.9rem;margin:14px 4px 0}.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#172033;color:#fff;padding:11px 16px;border-radius:999px;font-weight:700;font-size:.88rem;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.2s;z-index:99}.toast.show{opacity:1}
+    @media(min-width:760px){.toolbar{grid-template-columns:1fr;align-items:end}.fridays{grid-template-columns:repeat(2,1fr)}}@media(min-width:1050px){.fridays{grid-template-columns:repeat(3,1fr)}}
+  </style>
+</head>
+<body>
+<main class="app">
+  <section class="hero">
+    <h1>Disponibilités des moniteurs</h1>
+    <p>Choisissez votre nom puis indiquez votre disponibilité pour les prochains entraînements du vendredi. Les réponses sont partagées avec toute l'équipe.</p>
+    <div class="connection"><span class="dot" id="connectionDot"></span><span id="connectionText">Connexion à la base…</span></div>
+  </section>
+
+  <section class="toolbar">
+    <div class="control">
+      <label for="monitorSelect">Je suis</label>
+      <select id="monitorSelect"></select>
+    </div>
+  </section>
+
+  <div class="section-title"><div><h2>Mes prochains vendredis</h2><small>Appuyez simplement sur votre choix.</small></div></div>
+  <section class="fridays" id="fridays"></section>
+
+  <div class="section-title"><div><h2>Vue d'ensemble</h2><small>Les disponibilités sont visibles par toute l'équipe.</small></div></div>
+  <section class="overview"><div class="overview-scroll"><table><thead id="overviewHead"></thead><tbody id="overviewBody"></tbody></table></div></section>
+
+  <p class="footer-note">Les données sont enregistrées dans Supabase. Pour publier cette page, un simple hébergement statique comme GitHub Pages, Netlify ou votre site du club suffit.</p>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ==========================================================
+     CONFIGURATION SUPABASE
+     1) Créez un projet sur https://supabase.com
+     2) Copiez l'URL du projet ci-dessous
+     3) Copiez la clé "Publishable" (ou anon legacy) ci-dessous
+     IMPORTANT : ne mettez JAMAIS la clé service_role ici.
+     ========================================================== */
+  const SUPABASE_URL = "https://erkwoidseqootrrxmcyw.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_n2AAigH6CrO3xWO7CLmxYw_nXN_VnB5";
+
+  const monitors = [
+    "Stéphane","Alexandre","Céline","David","Élodie",
+    "François","Julie","Marc","Nathalie","Pierre"
+  ];
+
+  const USER_KEY = "moniteurs_current_user_v2";
+  const configured = SUPABASE_URL.startsWith("https://") && !SUPABASE_URL.includes("VOTRE_");
+  const db = configured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+  let data = {};
+
+  function upcomingFridays(count=8){
+    const dates=[], d=new Date(); d.setHours(12,0,0,0);
+    const add=(5-d.getDay()+7)%7; d.setDate(d.getDate()+add);
+    for(let i=0;i<count;i++){dates.push(new Date(d)); d.setDate(d.getDate()+7)}
+    return dates;
+  }
+  const fridays=upcomingFridays(8);
+  const dateKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  const formatDate=d=>new Intl.DateTimeFormat("fr-CH",{weekday:"long",day:"2-digit",month:"long"}).format(d);
+  const shortDate=d=>new Intl.DateTimeFormat("fr-CH",{day:"2-digit",month:"2-digit"}).format(d);
+
+  function setConnection(state,text){
+    const dot=document.getElementById("connectionDot");
+    dot.className="dot"+(state==="ok"?" ok":state==="bad"?" bad":"");
+    document.getElementById("connectionText").textContent=text;
+  }
+
+  function toast(text){
+    const t=document.getElementById("toast"); t.textContent=text; t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"),1800);
+  }
+
+  async function loadData(){
+    if(!configured){
+      setConnection("bad","Supabase n'est pas encore configuré");
+      render();
+      return;
+    }
+    setConnection("","Synchronisation…");
+    const first=dateKey(fridays[0]), last=dateKey(fridays[fridays.length-1]);
+    const {data:rows,error}=await db.from("availabilities")
+      .select("monitor,training_date,status")
+      .gte("training_date",first).lte("training_date",last);
+
+    if(error){
+      console.error(error); setConnection("bad","Erreur de connexion à Supabase"); toast("Impossible de charger les données");
+      return;
+    }
+    data={};
+    rows.forEach(r=>{ data[r.training_date] ||= {}; data[r.training_date][r.monitor]=r.status; });
+    setConnection("ok","Données synchronisées");
+    render();
+  }
+
+  function currentUser(){return document.getElementById("monitorSelect").value}
+
+  async function setStatus(date,status){
+    if(!configured){toast("Configurez d'abord Supabase"); return}
+    const key=dateKey(date), user=currentUser();
+    document.querySelectorAll(".status-btn").forEach(b=>b.disabled=true);
+
+    const {error}=await db.from("availabilities").upsert({
+      monitor:user, training_date:key, status:status, updated_at:new Date().toISOString()
+    },{onConflict:"monitor,training_date"});
+
+    if(error){
+      console.error(error); toast("Erreur lors de l'enregistrement");
+    } else {
+      data[key] ||= {}; data[key][user]=status; render(); toast("Disponibilité enregistrée");
+    }
+  }
+
+  function statusLabel(s){return s==="yes"?"✓":s==="no"?"✕":s==="maybe"?"?":"—"}
+  function statusText(s){return s==="yes"?"Présent":s==="no"?"Absent":s==="maybe"?"À confirmer":"Sans réponse"}
+  function countsFor(date){
+    const statuses=Object.values(data[dateKey(date)]||{});
+    return {yes:statuses.filter(s=>s==="yes").length,no:statuses.filter(s=>s==="no").length,maybe:statuses.filter(s=>s==="maybe").length,none:monitors.length-statuses.length};
+  }
+
+  function renderFridays(){
+    const root=document.getElementById("fridays"), user=currentUser(); root.innerHTML="";
+    fridays.forEach(date=>{
+      const key=dateKey(date), status=data[key]?.[user]||"none", c=countsFor(date), card=document.createElement("article");
+      card.className="friday-card";
+      card.innerHTML=`
+        <div class="friday-head"><div><div class="date-label">${formatDate(date)}</div><div class="date-sub">Entraînement du vendredi</div></div><div class="count-badge">${c.yes} présent${c.yes>1?"s":""}</div></div>
+        <div class="status-actions">
+          <button class="status-btn yes ${status==="yes"?"active":""}" data-status="yes">✓ Présent</button>
+          <button class="status-btn no ${status==="no"?"active":""}" data-status="no">✕ Absent</button>
+          <button class="status-btn maybe ${status==="maybe"?"active":""}" data-status="maybe">? Incertain</button>
+        </div>
+        <div class="status-summary">
+          <div class="sum yes">${c.yes}<br>présent</div><div class="sum no">${c.no}<br>absent</div>
+          <div class="sum maybe">${c.maybe}<br>incertain</div><div class="sum none">${c.none}<br>sans réponse</div>
+        </div>`;
+      card.querySelectorAll("[data-status]").forEach(btn=>btn.addEventListener("click",()=>setStatus(date,btn.dataset.status)));
+      root.appendChild(card);
+    });
+  }
+
+  function renderOverview(){
+    document.getElementById("overviewHead").innerHTML=`<tr><th>Moniteur</th>${fridays.map(d=>`<th>${shortDate(d)}</th>`).join("")}</tr>`;
+    document.getElementById("overviewBody").innerHTML=monitors.map(m=>`<tr><td>${m}</td>${fridays.map(d=>{const s=data[dateKey(d)]?.[m]||"none";return `<td title="${statusText(s)}"><span class="pill ${s}">${statusLabel(s)}</span></td>`}).join("")}</tr>`).join("");
+  }
+
+  function render(){renderFridays();renderOverview()}
+
+  function initSelect(){
+    const s=document.getElementById("monitorSelect");
+    s.innerHTML=monitors.map(m=>`<option value="${m}">${m}</option>`).join("");
+    const saved=localStorage.getItem(USER_KEY); if(saved&&monitors.includes(saved))s.value=saved;
+    s.addEventListener("change",()=>{localStorage.setItem(USER_KEY,s.value);render()});
+  }
+
+  initSelect(); render(); loadData();
+</script>
+</body>
+</html>
