@@ -113,7 +113,8 @@
   <div class="section-title"><div><h2>Vue d'ensemble</h2><small>🎓 indique le ou les moniteurs qui donnent l'entraînement.</small></div></div>
   <section class="overview"><div class="overview-scroll"><table><thead id="overviewHead"></thead><tbody id="overviewBody"></tbody></table></div></section>
 
-  <p class="footer-note">Les données sont partagées entre tous les moniteurs.</p>
+  <p class="footer-note" style="text-align: center;">Les données sont partagées entre tous les moniteurs.</p>
+  <p class="footer-note" style="text-align: center;"><b>Skytech.ai (STCO)</b> &copy; 2026</p>
 </main>
 <div class="toast" id="toast"></div>
 
@@ -273,7 +274,7 @@
 
         <div class="trainer-row ${entry.status!=="yes"?"disabled":""}">
           <input type="checkbox" id="trainer-${key}" ${entry.gives_training?"checked":""}>
-          <label for="trainer-${key}">Je donne l'entraînement</label>
+          <label for="trainer-${key}">J'anime l'entraînement</label>
         </div>
 
         <div class="status-summary">
