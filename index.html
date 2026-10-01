@@ -46,6 +46,7 @@
     th.holiday-head{background:#fee2e2;color:#991b1b}
     td.holiday-cell{background:#fee2e2}
     .holiday-pill{display:inline-flex;align-items:center;justify-content:center;min-width:64px;height:30px;padding:0 10px;border-radius:999px;background:#dc2626;color:#fff;font-weight:900;font-size:.72rem;letter-spacing:.04em}
+    .close-pill{display:inline-flex;align-items:center;justify-content:center;min-width:64px;height:30px;padding:0 10px;border-radius:999px;background:#d38b1f;color:#070707;font-weight:900;font-size:.72rem;letter-spacing:.04em}
 
     .friday-head{margin-bottom:14px}.date-label{font-weight:800;font-size:1.08rem}
     .status-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
@@ -335,6 +336,10 @@
 
           if(HOLIDAYS.has(key)){
             return `<td class="holiday-cell" title="Congé scolaire"><span class="holiday-pill">CONGÉ</span></td>`;
+          }
+
+          if(CLOSE.has(key)){
+            return `<td class="holiday-cell" title="Halloween"><span class="close-pill">HALLOWEEN</span></td>`;
           }
 
           const entry=data[key]?.[m]||{status:"none",gives_training:false};
