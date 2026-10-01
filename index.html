@@ -42,6 +42,7 @@
     .friday-card.holiday{background:#fde8e8;border-color:#ef4444}
     .friday-card.holiday .date-label{color:#991b1b}
     .holiday-banner{display:flex;align-items:center;justify-content:center;min-height:118px;border-radius:14px;background:#dc2626;color:#fff;font-size:1.35rem;font-weight:900;letter-spacing:.08em}
+    .closed-banner{display:flex;align-items:center;justify-content:center;min-height:150px;border-radius:14px;background:#d38b1f;color:#070707;font-size:1rem;font-weight:900;letter-spacing:.08em}
     th.holiday-head{background:#fee2e2;color:#991b1b}
     td.holiday-cell{background:#fee2e2}
     .holiday-pill{display:inline-flex;align-items:center;justify-content:center;min-width:64px;height:30px;padding:0 10px;border-radius:999px;background:#dc2626;color:#fff;font-weight:900;font-size:.72rem;letter-spacing:.04em}
@@ -135,6 +136,10 @@
     "2026-10-16",
     "2026-10-23",
     "2026-12-04"
+  ]);
+
+   const CLOSE = new Set([
+    "2026-10-30"
   ]);
 
   function upcomingFridaysUntil(endDateString){
@@ -245,6 +250,7 @@
     fridays.forEach(date=>{
       const key=dateKey(date);
       const isHoliday=HOLIDAYS.has(key);
+      const isClosed=CLOSE.has(key);
       const entry=data[key]?.[user]||{status:"none",gives_training:false};
       const c=countsFor(date);
       const card=document.createElement("article");
@@ -256,6 +262,17 @@
             <div class="date-label">${formatDate(date)}</div>
           </div>
           <div class="holiday-banner">Vacances scolaires</div>
+        `;
+        root.appendChild(card);
+        return;
+      }
+
+      if(isClosed){
+        card.innerHTML=`
+          <div class="friday-head">
+            <div class="date-label">${formatDate(date)}</div>
+          </div>
+          <div class="closed-banner">Piscine réservée par la commune pour le spectacle d'Halloween</div>
         `;
         root.appendChild(card);
         return;
